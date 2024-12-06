@@ -8,17 +8,26 @@
     <style>
         /* 反弹效果 */
         @keyframes bounce {
-            0%, 100% {
-                transform: translateY(0);
+            0% {
+                transform: translate(0, 0);
+            }
+            25% {
+                transform: translate(-10px, -10px);
             }
             50% {
-                transform: translateY(-10px);
+                transform: translate(10px, -10px);
+            }
+            75% {
+                transform: translate(-10px, 10px);
+            }
+            100% {
+                transform: translate(10px, 10px);
             }
         }
 
         .bounce-btn {
             display: inline-block;
-            padding: 8px 16px;
+            padding: 10px 20px;
             font-size: 16px;
             background-color: #ffffff;
             color: #333;
@@ -26,7 +35,7 @@
             border-radius: 12px;
             text-align: center;
             cursor: pointer;
-            animation: bounce 1s infinite;
+            animation: bounce 0.5s ease-in-out;
             transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
@@ -34,72 +43,103 @@
             background-color: #f1f1f1;
             border-color: #999;
         }
+
+        /* 按钮点击后的反弹 */
+        .bounce-btn.clicked {
+            animation: bounce 0.5s ease-out;
+        }
+
+        /* 页面背景和布局 */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f3f4f6;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+        }
     </style>
 </head>
-<body class="bg-gray-100 flex justify-center items-center h-screen">
+<body>
 
-    <div class="text-center">
-        <!-- 原来的天气查询内容 -->
-        <h1 class="text-2xl font-bold mb-4">天气查询</h1>
-        
-        <!-- 提示信息 -->
-        <p class="text-sm text-gray-500 mb-4">查询仅支持英文名，如查询“北京”则需输入“beijing”</p>
+<div class="container">
+    <h1 class="text-3xl font-bold mb-4">天气查询</h1>
+    <p class="text-sm text-gray-500 mb-4">查询仅支持英文名，如查询“北京”则需输入“beijing”</p>
 
-        <!-- 输入框和查询按钮 -->
-        <input id="city" type="text" placeholder="输入城市名" class="px-4 py-2 border rounded mb-4">
-        <button onclick="getWeather()" class="px-4 py-2 bg-blue-500 text-white rounded">查询天气</button>
+    <!-- 输入框和查询按钮 -->
+    <input id="city" type="text" placeholder="输入城市名" class="px-4 py-2 border rounded mb-4">
+    <button onclick="getWeather()" class="px-4 py-2 bg-blue-500 text-white rounded">查询天气</button>
 
-        <!-- 天气信息显示区 -->
-        <div id="weather-info" class="mt-4"></div>
+    <!-- 城市和天气信息显示区 -->
+    <div id="weather-info" class="mt-4"></div>
 
-        <!-- 反弹按钮 -->
-        <button class="bounce-btn mt-6" onclick="window.location.href='https://ys.mihoyo.com/'">
-            别点
-        </button>
-    </div>
+    <!-- 反弹按钮 -->
+    <button class="bounce-btn mt-6" id="bounceButton" onclick="handleButtonClick()">
+        别点
+    </button>
+</div>
 
-    <script>
-        async function getWeather() {
-            const city = document.getElementById('city').value.trim().toLowerCase();
-            const apiKey = 'fdb5da4cbed0679b2f6f9151d4b297d5'; // 替换成你的 API 密钥
-            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=zh_cn`;
+<script>
+    // 获取天气信息
+    async function getWeather() {
+        const city = document.getElementById('city').value.trim().toLowerCase();
+        const apiKey = 'fdb5da4cbed0679b2f6f9151d4b297d5'; // 替换成你的 API 密钥
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=zh_cn`;
 
-            if (city === '') {
-                alert('请输入城市名');
-                return;
-            }
-
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-
-                if (data.cod === '404') {
-                    document.getElementById('weather-info').innerHTML = '<p class="text-red-500">未找到该城市</p>';
-                } else {
-                    // 防御性检查，确保data.weather是一个数组并且包含数据
-                    if (data.weather && data.weather.length > 0) {
-                        const weather = data.weather[0].description;
-                        const temp = data.main.temp;
-                        const humidity = data.main.humidity;
-                        const windSpeed = data.wind.speed;
-
-                        document.getElementById('weather-info').innerHTML = `
-                            <p class="font-bold text-xl">${data.name}</p>
-                            <p>天气：${weather}</p>
-                            <p>温度：${temp}°C</p>
-                            <p>湿度：${humidity}%</p>
-                            <p>风速：${windSpeed} m/s</p>
-                        `;
-                    } else {
-                        document.getElementById('weather-info').innerHTML = '<p class="text-red-500">天气信息不可用</p>';
-                    }
-                }
-            } catch (error) {
-                console.error(error);
-                document.getElementById('weather-info').innerHTML = '<p class="text-red-500">无法获取天气数据</p>';
-            }
+        if (city === '') {
+            alert('请输入城市名');
+            return;
         }
-    </script>
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.cod === '404') {
+                document.getElementById('weather-info').innerHTML = '<p class="text-red-500">未找到该城市</p>';
+            } else {
+                // 防御性检查，确保data.weather是一个数组并且包含数据
+                if (data.weather && data.weather.length > 0) {
+                    const weather = data.weather[0].description;
+                    const temp = data.main.temp;
+                    const humidity = data.main.humidity;
+                    const windSpeed = data.wind.speed;
+
+                    // 显示城市名和天气信息
+                    document.getElementById('weather-info').innerHTML = `
+                        <p class="font-bold text-xl">${data.name}</p>
+                        <p>天气：${weather}</p>
+                        <p>温度：${temp}°C</p>
+                        <p>湿度：${humidity}%</p>
+                        <p>风速：${windSpeed} m/s</p>
+                    `;
+                } else {
+                    document.getElementById('weather-info').innerHTML = '<p class="text-red-500">天气信息不可用</p>';
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            document.getElementById('weather-info').innerHTML = '<p class="text-red-500">无法获取天气数据</p>';
+        }
+    }
+
+    // 反弹按钮点击事件
+    function handleButtonClick() {
+        const bounceButton = document.getElementById('bounceButton');
+
+        // 添加反弹类
+        bounceButton.classList.add('clicked');
+
+        // 设置按钮点击后跳转链接
+        setTimeout(() => {
+            window.location.href = 'https://ys.mihoyo.com/';
+        }, 500); // 延迟500毫秒后跳转
+    }
+</script>
 
 </body>
 </html>
