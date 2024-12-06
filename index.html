@@ -4,69 +4,88 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>天气查询</title>
-    <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 反弹效果 */
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .bounce-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            font-size: 16px;
+            background-color: #ffffff;
+            color: #333;
+            border: 2px solid #333;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            animation: bounce 1s infinite;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .bounce-btn:hover {
+            background-color: #f1f1f1;
+            border-color: #999;
+        }
+    </style>
 </head>
-<body class="bg-blue-100 font-sans antialiased">
+<body class="bg-gray-100 flex justify-center items-center h-screen">
 
-    <!-- Main Section -->
-    <section class="flex items-center justify-center min-h-screen bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
-        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-            <h1 class="text-3xl font-bold text-center text-indigo-600 mb-6">天气查询</h1>
+    <div class="text-center">
+        <!-- 你的天气查询内容 -->
 
-            <!-- 输入框和查询按钮 -->
-            <div class="mb-4">
-                <input type="text" id="city" placeholder="请输入城市名 (仅支持英文名)" 
-                    class="w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            </div>
+        <h1 class="text-2xl font-bold mb-4">天气查询</h1>
+        <input id="city" type="text" placeholder="输入城市名" class="px-4 py-2 border rounded mb-4">
+        <button onclick="getWeather()" class="px-4 py-2 bg-blue-500 text-white rounded">查询天气</button>
 
-            <button onclick="getWeather()" 
-                class="w-full py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                查询天气
-            </button>
+        <div id="weather-info" class="mt-4"></div>
 
-            <!-- 天气信息展示 -->
-            <div id="weather-info" class="mt-6 text-center text-indigo-700"></div>
+        <!-- 反弹按钮 -->
+        <button class="bounce-btn mt-6" onclick="window.location.href='https://www.example.com'">
+            别点
+        </button>
+    </div>
 
-            <!-- 提示：支持英文名查询 -->
-            <p class="text-sm text-center text-gray-500 mt-4">查询仅支持英文名，如查询“北京”则需输入“beijing”</p>
-        </div>
-    </section>
-
-    <!-- 内部定义的 JS 代码 -->
     <script>
-        // 获取天气函数
         async function getWeather() {
-            let city = document.getElementById('city').value.trim();
-            
-            const apiKey = 'fdb5da4cbed0679b2f6f9151d4b297d5'; // 替换为你的API密钥
+            const city = document.getElementById('city').value.trim().toLowerCase();
+            const apiKey = 'fdb5da4cbed0679b2f6f9151d4b297d5'; // 替换成你的 API 密钥
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=zh_cn`;
 
-            if (!city) {
+            if (city === '') {
                 alert('请输入城市名');
                 return;
             }
 
-            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=zh_cn`;
-
             try {
                 const response = await fetch(url);
                 const data = await response.json();
-                
-                if (response.ok) {
-                    const weatherInfo = `
-                        <h3 class="text-xl font-bold">${data.name} 的天气</h3>
-                        <p>温度: ${data.main.temp}°C</p>
-                        <p>湿度: ${data.main.humidity}%</p>
-                        <p>天气: ${data.weather[0].description}</p>
-                        <p>风速: ${data.wind.speed} m/s</p>
-                    `;
-                    document.getElementById('weather-info').innerHTML = weatherInfo;
+
+                if (data.cod === '404') {
+                    document.getElementById('weather-info').innerHTML = '<p class="text-red-500">未找到该城市</p>';
                 } else {
-                    document.getElementById('weather-info').innerHTML = `<p class="text-red-500">错误: ${data.message}</p>`;
+                    const weather = data.weather[0].description;
+                    const temp = data.main.temp;
+                    const humidity = data.main.humidity;
+                    const windSpeed = data.wind.speed;
+
+                    document.getElementById('weather-info').innerHTML = `
+                        <p>天气：${weather}</p>
+                        <p>温度：${temp}°C</p>
+                        <p>湿度：${humidity}%</p>
+                        <p>风速：${windSpeed} m/s</p>
+                    `;
                 }
             } catch (error) {
-                console.error('获取天气数据时发生错误:', error);
-                document.getElementById('weather-info').innerHTML = `<p class="text-red-500">请求失败，请检查网络或API设置。</p>`;
+                console.error(error);
+                document.getElementById('weather-info').innerHTML = '<p class="text-red-500">无法获取天气数据</p>';
             }
         }
     </script>
