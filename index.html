@@ -1,98 +1,100 @@
 <script>
-    // 获取天气信息
-    async function getWeather() {
-        const city = document.getElementById('city').value.trim().toLowerCase();
-        const apiKey = 'fdb5da4cbed0679b2f6f9151d4b297d5'; // 替换成你的 API 密钥
-        const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=zh_cn`;
+    document.addEventListener('DOMContentLoaded', () => {
+        // 获取天气信息
+        async function getWeather() {
+            const city = document.getElementById('city').value.trim().toLowerCase();
+            const apiKey = 'fdb5da4cbed0679b2f6f9151d4b297d5'; // 替换成你的 API 密钥
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=zh_cn`;
 
-        if (city === '') {
-            alert('请输入城市名');
-            return;
-        }
+            if (city === '') {
+                alert('请输入城市名');
+                return;
+            }
 
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
 
-            if (data.cod === '404') {
-                document.getElementById('weather-info').innerHTML = '<p class="text-red-500">未找到该城市</p>';
-            } else {
-                if (data.weather && data.weather.length > 0) {
-                    const weather = data.weather[0].description;
-                    const temp = data.main.temp;
-                    const humidity = data.main.humidity;
-                    const windSpeed = data.wind.speed;
-
-                    document.getElementById('weather-info').innerHTML = `
-                        <p class="font-bold text-xl">${data.name}</p>
-                        <p>天气：${weather}</p>
-                        <p>温度：${temp}°C</p>
-                        <p>湿度：${humidity}%</p>
-                        <p>风速：${windSpeed} m/s</p>
-                    `;
+                if (data.cod === '404') {
+                    document.getElementById('weather-info').innerHTML = '<p class="text-red-500">未找到该城市</p>';
                 } else {
-                    document.getElementById('weather-info').innerHTML = '<p class="text-red-500">天气信息不可用</p>';
+                    if (data.weather && data.weather.length > 0) {
+                        const weather = data.weather[0].description;
+                        const temp = data.main.temp;
+                        const humidity = data.main.humidity;
+                        const windSpeed = data.wind.speed;
+
+                        document.getElementById('weather-info').innerHTML = `
+                            <p class="font-bold text-xl">${data.name}</p>
+                            <p>天气：${weather}</p>
+                            <p>温度：${temp}°C</p>
+                            <p>湿度：${humidity}%</p>
+                            <p>风速：${windSpeed} m/s</p>
+                        `;
+                    } else {
+                        document.getElementById('weather-info').innerHTML = '<p class="text-red-500">天气信息不可用</p>';
+                    }
                 }
+            } catch (error) {
+                console.error(error);
+                document.getElementById('weather-info').innerHTML = '<p class="text-red-500">无法获取天气数据</p>';
             }
-        } catch (error) {
-            console.error(error);
-            document.getElementById('weather-info').innerHTML = '<p class="text-red-500">无法获取天气数据</p>';
-        }
-    }
-
-    // 反弹按钮的物理效果
-    let button = document.getElementById('bounceButton');
-    let xPos = 200; // 初始X坐标
-    let yPos = 200; // 初始Y坐标
-    let xSpeed = 2;  // X方向速度
-    let ySpeed = 2;  // Y方向速度
-    let buttonWidth = button.offsetWidth;
-    let buttonHeight = button.offsetHeight;
-    let isHovered = false; // 鼠标悬停标志
-
-    // 停止移动：鼠标进入时
-    button.addEventListener('mouseenter', () => {
-        isHovered = true; // 鼠标悬停时设置为 true
-    });
-
-    // 恢复移动：鼠标离开时
-    button.addEventListener('mouseleave', () => {
-        isHovered = false; // 鼠标移开时设置为 false
-    });
-
-    // 动画逻辑
-    function animateButton() {
-        if (!isHovered) {
-            // 如果未悬停，更新位置
-            xPos += xSpeed;
-            yPos += ySpeed;
-
-            // 碰撞检测：碰到左右边界
-            if (xPos <= 0 || xPos + buttonWidth >= window.innerWidth) {
-                xSpeed = -xSpeed; // 反转X方向
-            }
-
-            // 碰撞检测：碰到上下边界
-            if (yPos <= 0 || yPos + buttonHeight >= window.innerHeight) {
-                ySpeed = -ySpeed; // 反转Y方向
-            }
-
-            // 更新按钮位置
-            button.style.left = `${xPos}px`;
-            button.style.top = `${yPos}px`;
         }
 
-        // 请求下一帧动画
-        requestAnimationFrame(animateButton);
-    }
+        // 反弹按钮的物理效果
+        let button = document.getElementById('bounceButton');
+        let xPos = 200; // 初始X坐标
+        let yPos = 200; // 初始Y坐标
+        let xSpeed = 2;  // X方向速度
+        let ySpeed = 2;  // Y方向速度
+        let buttonWidth = button.offsetWidth;
+        let buttonHeight = button.offsetHeight;
+        let isHovered = false; // 鼠标悬停标志
 
-    // 启动动画
-    animateButton();
+        // 停止移动：鼠标进入时
+        button.addEventListener('mouseenter', () => {
+            isHovered = true; // 鼠标悬停时设置为 true
+        });
 
-    // 反弹按钮点击事件
-    function handleButtonClick() {
-        setTimeout(() => {
-            window.location.href = 'https://ys.mihoyo.com/'; // 跳转到目标URL
-        }, 100); // 延迟100毫秒后跳转
-    }
+        // 恢复移动：鼠标离开时
+        button.addEventListener('mouseleave', () => {
+            isHovered = false; // 鼠标移开时设置为 false
+        });
+
+        // 动画逻辑
+        function animateButton() {
+            if (!isHovered) {
+                // 如果未悬停，更新位置
+                xPos += xSpeed;
+                yPos += ySpeed;
+
+                // 碰撞检测：碰到左右边界
+                if (xPos <= 0 || xPos + buttonWidth >= window.innerWidth) {
+                    xSpeed = -xSpeed; // 反转X方向
+                }
+
+                // 碰撞检测：碰到上下边界
+                if (yPos <= 0 || yPos + buttonHeight >= window.innerHeight) {
+                    ySpeed = -ySpeed; // 反转Y方向
+                }
+
+                // 更新按钮位置
+                button.style.left = `${xPos}px`;
+                button.style.top = `${yPos}px`;
+            }
+
+            // 请求下一帧动画
+            requestAnimationFrame(animateButton);
+        }
+
+        // 启动动画
+        animateButton();
+
+        // 反弹按钮点击事件
+        function handleButtonClick() {
+            setTimeout(() => {
+                window.location.href = 'https://ys.mihoyo.com/'; // 跳转到目标URL
+            }, 100); // 延迟100毫秒后跳转
+        }
+    });
 </script>
