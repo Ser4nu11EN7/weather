@@ -3,52 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>天气查询</title>
+    <title>天气查询与物理效果按钮</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 反弹效果 */
-        @keyframes bounce {
-            0% {
-                transform: translate(0, 0);
-            }
-            25% {
-                transform: translate(-10px, -10px);
-            }
-            50% {
-                transform: translate(10px, -10px);
-            }
-            75% {
-                transform: translate(-10px, 10px);
-            }
-            100% {
-                transform: translate(10px, 10px);
-            }
-        }
-
-        .bounce-btn {
-            display: inline-block;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #ffffff;
-            color: #333;
-            border: 2px solid #333;
-            border-radius: 12px;
-            text-align: center;
-            cursor: pointer;
-            animation: bounce 0.5s ease-in-out;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-
-        .bounce-btn:hover {
-            background-color: #f1f1f1;
-            border-color: #999;
-        }
-
-        /* 按钮点击后的反弹 */
-        .bounce-btn.clicked {
-            animation: bounce 0.5s ease-out;
-        }
-
         /* 页面背景和布局 */
         body {
             display: flex;
@@ -57,10 +14,54 @@
             height: 100vh;
             background-color: #f3f4f6;
             font-family: Arial, sans-serif;
+            margin: 0;
+            overflow: hidden; /* 防止滚动条 */
         }
 
         .container {
             text-align: center;
+        }
+
+        /* 反弹按钮样式 */
+        .bounce-btn {
+            position: absolute;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #ffffff;
+            color: #333;
+            border: 2px solid #333;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .bounce-btn:hover {
+            background-color: #f1f1f1;
+            border-color: #999;
+        }
+
+        /* 输入框和查询按钮 */
+        #city {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
@@ -72,15 +73,13 @@
 
     <!-- 输入框和查询按钮 -->
     <input id="city" type="text" placeholder="输入城市名" class="px-4 py-2 border rounded mb-4">
-    <button onclick="getWeather()" class="px-4 py-2 bg-blue-500 text-white rounded">查询天气</button>
+    <button onclick="getWeather()">查询天气</button>
 
     <!-- 城市和天气信息显示区 -->
     <div id="weather-info" class="mt-4"></div>
 
     <!-- 反弹按钮 -->
-    <button class="bounce-btn mt-6" id="bounceButton" onclick="handleButtonClick()">
-        别点
-    </button>
+    <button id="bounceButton" class="bounce-btn" onclick="handleButtonClick()">别点</button>
 </div>
 
 <script>
@@ -127,16 +126,47 @@
         }
     }
 
+    // 反弹按钮的物理效果
+    let button = document.getElementById('bounceButton');
+    let xPos = 200; // 初始X坐标
+    let yPos = 200; // 初始Y坐标
+    let xSpeed = 3;  // X方向速度
+    let ySpeed = 3;  // Y方向速度
+    let buttonWidth = button.offsetWidth;
+    let buttonHeight = button.offsetHeight;
+
+    // 监听动画帧并更新按钮位置
+    function animateButton() {
+        // 更新位置
+        xPos += xSpeed;
+        yPos += ySpeed;
+
+        // 碰撞检测：碰到左右边界
+        if (xPos <= 0 || xPos + buttonWidth >= window.innerWidth) {
+            xSpeed = -xSpeed; // 反转X方向
+        }
+
+        // 碰撞检测：碰到上下边界
+        if (yPos <= 0 || yPos + buttonHeight >= window.innerHeight) {
+            ySpeed = -ySpeed; // 反转Y方向
+        }
+
+        // 更新按钮位置
+        button.style.left = `${xPos}px`;
+        button.style.top = `${yPos}px`;
+
+        // 请求下一个动画帧
+        requestAnimationFrame(animateButton);
+    }
+
+    // 启动动画
+    animateButton();
+
     // 反弹按钮点击事件
     function handleButtonClick() {
-        const bounceButton = document.getElementById('bounceButton');
-
-        // 添加反弹类
-        bounceButton.classList.add('clicked');
-
-        // 设置按钮点击后跳转链接
+        // 在按钮点击时改变目标URL
         setTimeout(() => {
-            window.location.href = 'https://ys.mihoyo.com/';
+            window.location.href = 'https://ys.mihoyo.com/'; // 跳转到目标URL
         }, 500); // 延迟500毫秒后跳转
     }
 </script>
