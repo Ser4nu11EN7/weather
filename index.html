@@ -86,7 +86,7 @@
     // 获取天气信息
     async function getWeather() {
         const city = document.getElementById('city').value.trim().toLowerCase();
-        const apiKey = 'fdb5da4cbed0679b2f6f9151d4b297d5'; // 替换成你的 API 密钥
+        const apiKey = ''; // 替换成你的 API 密钥
         const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=zh_cn`;
 
         if (city === '') {
