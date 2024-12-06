@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天气预报</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .weather-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 300px;
+        }
+        input {
+            padding: 10px;
+            width: 80%;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="weather-container">
+    <h2 class="text-2xl font-bold mb-4">天气预报</h2>
+    <input type="text" id="city" placeholder="输入城市名">
+    <button onclick="getWeather()">查看天气</button>
+
+    <div id="weather-info" class="mt-4">
+        <!-- 天气信息将在这里显示 -->
+    </div>
+</div>
+
+<script>
+    async function getWeather() {
+        const city = document.getElementById('city').value;
+        const apiKey = 'fdb5da4cbed0679b2f6f9151d4b297d5'; // 替换成你从OpenWeatherMap或WeatherAPI获取的API密钥
+
+        if (!city) {
+            alert('请输入城市名');
+            return;
+        }
+
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=zh_cn`;
+
+        console.log('请求的URL:', url); // 调试信息
+        console.log('城市:', city); // 调试信息
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.cod === 200) {
+                const weatherInfo = `
+                    <h3 class="text-xl font-bold">${data.name} 的天气</h3>
+                    <p>温度: ${data.main.temp}°C</
