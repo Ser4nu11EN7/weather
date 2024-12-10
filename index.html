@@ -72,8 +72,8 @@
         /* 反弹按钮样式 */
         .bounce-btn {
             position: absolute;
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 8px 16px;
+            font-size: 14px;
             background-color: #ffffff;
             color: #333;
             border: 2px solid #333;
@@ -100,7 +100,7 @@
     </div>
 
     <!-- 反弹按钮 -->
-    <button id="bounceButton" class="bounce-btn">别点我</button>
+    <button id="bounceButton" class="bounce-btn">别点</button>
 
     <script>
         let chart;
@@ -156,6 +156,11 @@
             }
 
             animateButton();
+
+            // 点击按钮跳转到目标页面
+            button.addEventListener('click', () => {
+                window.location.href = 'https://ys.mihoyo.com/';
+            });
         });
 
         // 天气查询函数
@@ -232,37 +237,4 @@
         }
 
         function createTempChart(data) {
-            const ctx = document.getElementById('tempChart').getContext('2d');
-            const dailyForecasts = data.list.filter(item => item.dt_txt.includes('12:00:00'));
-            const labels = dailyForecasts.slice(0, 5).map(day => new Date(day.dt * 1000).toLocaleDateString());
-            const temperatures = dailyForecasts.slice(0, 5).map(day => day.main.temp);
-
-            if (chart) {
-                chart.destroy();
-            }
-
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '温度 (°C)',
-                        data: temperatures,
-                        borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: '5天温度预报'
-                        }
-                    }
-                }
-            });
-        }
-    </script>
-</body>
-</html>
+            const ctx = document.getEl
