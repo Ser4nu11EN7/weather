@@ -124,7 +124,7 @@
     <button id="bounceButton" class="bounce-btn" onclick="handleButtonClick()">别点</button>
 
     <!-- 折线图 -->
-    <div id="temperatureChart"></div>
+    <canvas id="temperatureChart" width="400" height="200"></canvas> <!-- 修改为 canvas 元素 -->
 </div>
 
 <script>
@@ -246,7 +246,7 @@
     }
 
     function createTemperatureChart(dates, tempMaxData, tempMinData) {
-        const ctx = document.getElementById('temperatureChart').getContext('2d');
+        const ctx = document.getElementById('temperatureChart').getContext('2d');  // 获取 canvas 的上下文
         new Chart(ctx, {
             type: 'line',
             data: {
