@@ -6,7 +6,6 @@
     <title>天气查询</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 页面背景和布局 */
         body {
             display: flex;
             justify-content: center;
@@ -22,7 +21,6 @@
             text-align: center;
         }
 
-        /* 输入框和查询按钮 */
         input {
             padding: 10px;
             font-size: 16px;
@@ -46,7 +44,6 @@
             background-color: #0056b3;
         }
 
-        /* 显示五天天气的容器 */
         .weather-day {
             display: flex;
             justify-content: center;
@@ -69,7 +66,6 @@
             margin: 5px 0;
         }
 
-        /* 反弹按钮样式 */
         .bounce-btn {
             position: absolute;
             padding: 8px 16px;
@@ -102,14 +98,11 @@
     <h1 class="text-3xl font-bold mb-4">天气查询</h1>
     <p class="text-sm text-gray-500 mb-4">查询仅支持英文名，如查询“北京”则需输入“beijing”</p>
 
-    <!-- 输入框和查询按钮 -->
     <input id="city" type="text" placeholder="输入城市名" class="px-4 py-2 border rounded mb-4">
     <button onclick="getWeather()">查询天气</button>
 
-    <!-- 城市和天气信息显示区 -->
     <div id="weather-info" class="mt-4"></div>
 
-    <!-- 反弹按钮 -->
     <button id="bounceButton" class="bounce-btn" onclick="handleButtonClick()">别点</button>
 </div>
 
@@ -167,7 +160,8 @@
                 const date = new Date(day.dt * 1000);
                 const dateStr = date.toLocaleDateString();
                 const weather = day.weather[0].description;
-                const temp = day.main.temp;
+                const tempMax = day.main.temp_max;
+                const tempMin = day.main.temp_min;
                 const humidity = day.main.humidity;
                 const windSpeed = day.wind.speed;
                 const icon = day.weather[0].icon;
@@ -178,7 +172,8 @@
                         <p class="font-bold">${dateStr}</p>
                         <img src="${iconUrl}" alt="${weather}">
                         <p>${weather}</p>
-                        <p>温度：${temp}°C</p>
+                        <p>最高温度：${tempMax}°C</p>
+                        <p>最低温度：${tempMin}°C</p>
                         <p>湿度：${humidity}%</p>
                         <p>风速：${windSpeed} m/s</p>
                     </div>
