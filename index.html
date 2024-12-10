@@ -26,14 +26,21 @@
             max-width: 900px;
         }
 
-        /* 输入框和查询按钮 */
+        /* 输入框和查询按钮容器 */
+        .search-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
         #city {
             padding: 10px;
             font-size: 16px;
             border: 2px solid #ccc;
             border-radius: 8px;
-            margin-bottom: 20px;
             width: 250px; /* 设置宽度 */
+            margin-right: 10px;
         }
 
         button {
@@ -116,8 +123,10 @@
     <p class="text-sm text-gray-500 mb-4">查询仅支持英文名，如查询“北京”则需输入“beijing”</p>
 
     <!-- 输入框和查询按钮 -->
-    <input id="city" type="text" placeholder="输入城市名" class="px-4 py-2 border rounded mb-4">
-    <button onclick="getWeather()">查询天气</button>
+    <div class="search-container">
+        <input id="city" type="text" placeholder="输入城市名" class="px-4 py-2 border rounded">
+        <button onclick="getWeather()">查询天气</button>
+    </div>
 
     <!-- 城市和天气信息显示区 -->
     <div id="weather-info" class="mt-4"></div>
