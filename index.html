@@ -11,7 +11,7 @@
         body {
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             flex-direction: column;
             height: 100vh;
             background-color: #f3f4f6;
@@ -102,15 +102,10 @@
         /* 折线图容器 */
         #temperatureChart {
             margin-top: 30px;
+            max-width: 800px;
             width: 100%;
-            display: flex;
-            justify-content: center;
-        }
-
-        /* 画布 (canvas) 的宽度和居中设置 */
-        canvas {
-            max-width: 800px; /* 限制画布最大宽度 */
-            width: 100%;  /* 让画布在父元素内自适应 */
+            margin-left: auto;
+            margin-right: auto; /* 居中折线图 */
         }
     </style>
 </head>
@@ -131,9 +126,7 @@
     <button id="bounceButton" class="bounce-btn" onclick="handleButtonClick()">别点</button>
 
     <!-- 折线图 -->
-    <div id="temperatureChart">
-        <canvas id="temperatureChartCanvas" width="400" height="200"></canvas>
-    </div>
+    <div id="temperatureChart"></div>
 </div>
 
 <script>
@@ -255,7 +248,7 @@
     }
 
     function createTemperatureChart(dates, tempMaxData, tempMinData) {
-        const ctx = document.getElementById('temperatureChartCanvas').getContext('2d');
+        const ctx = document.getElementById('temperatureChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
             data: {
