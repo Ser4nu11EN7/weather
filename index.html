@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>天气查询</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- 引入 Chart.js -->
     <style>
         body {
             display: flex;
@@ -90,6 +91,13 @@
             width: 60px;
             height: 60px;
         }
+
+        /* 折线图容器 */
+        #temperature-chart {
+            width: 80%;
+            height: 400px;
+            margin: 40px auto;
+        }
     </style>
 </head>
 <body>
@@ -102,6 +110,9 @@
     <button onclick="getWeather()">查询天气</button>
 
     <div id="weather-info" class="mt-4"></div>
+
+    <!-- 显示折线图的容器 -->
+    <canvas id="temperature-chart"></canvas>
 
     <button id="bounceButton" class="bounce-btn" onclick="handleButtonClick()">别点</button>
 </div>
@@ -155,7 +166,12 @@
             }
 
             const days = data.list.filter((item, index) => index % 8 === 0);
+
             let weatherHTML = '<div class="weather-day">';
+            let dates = [];
+            let tempMaxData = [];
+            let tempMinData = [];
+
             days.forEach(day => {
                 const date = new Date(day.dt * 1000);
                 const dateStr = date.toLocaleDateString();
@@ -166,6 +182,10 @@
                 const windSpeed = day.wind.speed;
                 const icon = day.weather[0].icon;
                 const iconUrl = `https://openweathermap.org/img/wn/${icon}.png`;
+
+                dates.push(dateStr);
+                tempMaxData.push(tempMax);
+                tempMinData.push(tempMin);
 
                 weatherHTML += `
                     <div class="weather-card">
@@ -179,12 +199,61 @@
                     </div>
                 `;
             });
+
             weatherHTML += '</div>';
             document.getElementById('weather-info').innerHTML = weatherHTML;
+
+            // 创建折线图
+            createTemperatureChart(dates, tempMaxData, tempMinData);
+
         } catch (error) {
             console.error(error);
             document.getElementById('weather-info').innerHTML = '<p class="text-red-500">无法获取天气数据</p>';
         }
+    }
+
+    function createTemperatureChart(labels, tempMaxData, tempMinData) {
+        const ctx = document.getElementById('temperature-chart').getContext('2d');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: '最高温度 (°C)',
+                        data: tempMaxData,
+                        borderColor: '#FF5733',
+                        backgroundColor: 'rgba(255, 87, 51, 0.2)',
+                        fill: true,
+                    },
+                    {
+                        label: '最低温度 (°C)',
+                        data: tempMinData,
+                        borderColor: '#33A1FF',
+                        backgroundColor: 'rgba(51, 161, 255, 0.2)',
+                        fill: true,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                    }
+                }
+            }
+        });
     }
 
     function handleButtonClick() {
