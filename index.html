@@ -85,6 +85,14 @@
             background-color: #f1f1f1;
             border-color: #999;
         }
+
+        /* 图标居中 */
+        .weather-card img {
+            display: block;
+            margin: 0 auto;
+            width: 60px; /* 图标宽度 */
+            height: 60px; /* 图标高度 */
+        }
     </style>
 </head>
 <body>
@@ -182,49 +190,4 @@
 
             if (data.cod !== '200') {
                 document.getElementById('weather-info').innerHTML = '<p class="text-red-500">未找到该城市</p>';
-                return;
-            }
-
-            const days = data.list.filter((item, index) => index % 8 === 0); // 每8个小时为一天，获取每天的数据
-
-            let weatherHTML = '<div class="weather-day">';
-            days.forEach(day => {
-                const date = new Date(day.dt * 1000);
-                const dateStr = date.toLocaleDateString();
-                const weather = day.weather[0].description;
-                const temp = day.main.temp;
-                const humidity = day.main.humidity;
-                const windSpeed = day.wind.speed;
-                const icon = day.weather[0].icon; // 获取天气图标ID
-
-                const iconUrl = `https://openweathermap.org/img/wn/${icon}.png`; // 图标URL
-
-                weatherHTML += `
-                    <div class="weather-card">
-                        <p class="font-bold">${dateStr}</p>
-                        <img src="${iconUrl}" alt="${weather}" width="50" height="50">
-                        <p>${weather}</p>
-                        <p>温度：${temp}°C</p>
-                        <p>湿度：${humidity}%</p>
-                        <p>风速：${windSpeed} m/s</p>
-                    </div>
-                `;
-            });
-            weatherHTML += '</div>';
-            document.getElementById('weather-info').innerHTML = weatherHTML;
-        } catch (error) {
-            console.error(error);
-            document.getElementById('weather-info').innerHTML = '<p class="text-red-500">无法获取天气数据</p>';
-        }
-    }
-
-    // 按钮点击事件
-    function handleButtonClick() {
-        setTimeout(() => {
-            window.location.href = 'https://ys.mihoyo.com/'; // 跳转到目标URL
-        }, 100);
-    }
-</script>
-
-</body>
-</html>
+   
