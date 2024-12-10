@@ -64,6 +64,7 @@
         button:hover {
             background-color: #0056b3;
         }
+
         .forecast-container {
             display: flex;
             overflow-x: auto;
@@ -77,7 +78,7 @@
             padding: 15px;
             margin-bottom: 15px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            min-width: 200px; /* 设置最小宽度以确保内容不会被挤压 */
+            min-width: 200px;
         }
 
         .weather-icon {
@@ -85,7 +86,6 @@
             margin-right: 10px;
         }
 
-        /* 为了适应移动设备，我们可以添加一些响应式样式 */
         @media (max-width: 768px) {
             .forecast-container {
                 flex-direction: column;
@@ -103,7 +103,7 @@
     <p class="text-sm text-gray-500 mb-4">查询仅支持英文名，如查询"北京"则需输入"beijing"</p>
 
     <input id="city" type="text" placeholder="输入城市名" class="px-4 py-2 border rounded mb-4">
-    <button onclick="getWeather()">查询天气</button>
+    <button onclick="debouncedGetWeather()">查询天气</button>
 
     <div id="weather-info" class="mt-4"></div>
     <div id="forecast-info" class="mt-4"></div>
@@ -113,6 +113,23 @@
 </div>
 
 <script>
+    let chart;
+    let animationId;
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    const debouncedGetWeather = debounce(getWeather, 300);
+
     document.addEventListener('DOMContentLoaded', () => {
         const button = document.getElementById('bounceButton');
 
@@ -127,8 +144,7 @@
         let ySpeed = 2;
         let isHovered = false;
 
-        button.style.left = `${xPos}px`;
-        button.style.top = `${yPos}px`;
+        button.style.transform = `translate(${xPos}px, ${yPos}px)`;
 
         button.addEventListener('mouseenter', () => {
             isHovered = true;
@@ -151,17 +167,14 @@
                     ySpeed = -ySpeed;
                 }
 
-                button.style.left = `${xPos}px`;
-                button.style.top = `${yPos}px`;
+                button.style.transform = `translate(${xPos}px, ${yPos}px)`;
             }
 
-            requestAnimationFrame(animateButton);
+            animationId = requestAnimationFrame(animateButton);
         }
 
         animateButton();
     });
-
-    let chart;
 
     async function getWeather() {
         const city = document.getElementById('city').value.trim().toLowerCase();
@@ -223,26 +236,28 @@
 
     function displayForecast(data) {
         const forecastDiv = document.getElementById('forecast-info');
-        forecastDiv.innerHTML = '<h2 class="font-bold text-xl mb-4">未来五天天气预报</h2>';
-        forecastDiv.innerHTML += '<div class="forecast-container"></div>';
-        const forecastContainer = forecastDiv.querySelector('.forecast-container');
+        const forecastContainer = document.createElement('div');
+        forecastContainer.className = 'forecast-container';
 
         const dailyForecasts = data.list.filter(item => item.dt_txt.includes('12:00:00'));
-        dailyForecasts.slice(0, 5).forEach(day => {
+        const forecastHTML = dailyForecasts.slice(0, 5).map(day => {
             const date = new Date(day.dt * 1000);
             const weatherIcon = getWeatherIcon(day.weather[0].icon);
-        
-            const dayCard = document.createElement('div');
-            dayCard.className = 'weather-card';
-            dayCard.innerHTML = `
-                <h3 class="font-bold">${date.toLocaleDateString()}</h3>
-                <p><i class="${weatherIcon} weather-icon"></i>${day.weather[0].description}</p>
-                <p><i class="fas fa-thermometer-half weather-icon"></i>${day.main.temp.toFixed(1)}°C</p>
-                <p><i class="fas fa-tint weather-icon"></i>${day.main.humidity}%</p>
-                <p><i class="fas fa-wind weather-icon"></i>${day.wind.speed} m/s</p>
+            
+            return `
+                <div class="weather-card">
+                    <h3 class="font-bold">${date.toLocaleDateString()}</h3>
+                    <p><i class="${weatherIcon} weather-icon"></i>${day.weather[0].description}</p>
+                    <p><i class="fas fa-thermometer-half weather-icon"></i>${day.main.temp.toFixed(1)}°C</p>
+                    <p><i class="fas fa-tint weather-icon"></i>${day.main.humidity}%</p>
+                    <p><i class="fas fa-wind weather-icon"></i>${day.wind.speed} m/s</p>
+                </div>
             `;
-            forecastContainer.appendChild(dayCard);
-        });
+        }).join('');
+
+        forecastContainer.innerHTML = forecastHTML;
+        forecastDiv.innerHTML = '<h2 class="font-bold text-xl mb-4">未来五天天气预报</h2>';
+        forecastDiv.appendChild(forecastContainer);
     }
 
     function createTempChart(data) {
@@ -253,48 +268,51 @@
         const minTemps = dailyForecasts.slice(0, 5).map(day => day.main.temp_min);
 
         if (chart) {
-            chart.destroy();
-        }
-
-        chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: dates,
-                datasets: [
-                    {
-                        label: '最高温度',
-                        data: maxTemps,
-                        borderColor: 'rgb(255, 99, 132)',
-                        tension: 0.1
-                    },
-                    {
-                        label: '最低温度',
-                        data: minTemps,
-                        borderColor: 'rgb(54, 162, 235)',
-                        tension: 0.1
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false, // 允许图表自适应容器大小
-                plugins: {
-                    title: {
-                        display:true,
-                        text: '5天温度预报'
-                    }
+            chart.data.labels = dates;
+            chart.data.datasets[0].data = maxTemps;
+            chart.data.datasets[1].data = minTemps;
+            chart.update();
+        } else {
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: '最高温度',
+                            data: maxTemps,
+                            borderColor: 'rgb(255, 99, 132)',
+                            tension: 0.1
+                        },
+                        {
+                            label: '最低温度',
+                            data: minTemps,
+                            borderColor: 'rgb(54, 162, 235)',
+                            tension: 0.1
+                        }
+                    ]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: false,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
                         title: {
                             display: true,
-                            text: '温度 (°C)'
+                            text: '5天温度预报'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: '温度 (°C)'
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
     function getWeatherIcon(iconCode) {
@@ -325,6 +343,10 @@
         setTimeout(() => {
             window.location.href = 'https://ys.mihoyo.com/';
         }, 100);
+    }
+
+    function stopAnimation() {
+        cancelAnimationFrame(animationId);
     }
 </script>
 
