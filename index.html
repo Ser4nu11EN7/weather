@@ -66,29 +66,17 @@
             width: 150px;
         }
 
+        .weather-icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0;
+        }
+
         #temperatureChart {
             margin-top: 30px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        /* “别动”按钮样式 */
-        .bounce-btn {
-            position: absolute;
-            padding: 8px 16px;
-            font-size: 14px;
-            background-color: #ffffff;
-            color: #333;
-            border: 2px solid #333;
-            border-radius: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-
-        .bounce-btn:hover {
-            background-color: #f1f1f1;
-            border-color: #999;
+            width: 100%;
+            height: 400px;
         }
     </style>
 </head>
@@ -102,39 +90,9 @@
     <canvas id="temperatureChart"></canvas>
 </div>
 
-<button id="bounceButton" class="bounce-btn" onclick="handleButtonClick()">别动</button>
-
 <script>
     const amapApiKey = 'ac8cd713a54f95c1ab528538e5671bcc'; // 高德地图 API 密钥
     const weatherApiKey = 'fdb5da4cbed0679b2f6f9151d4b297d5'; // OpenWeatherMap API 密钥
-
-    // “别动”按钮动画
-    document.addEventListener('DOMContentLoaded', () => {
-        const button = document.getElementById('bounceButton');
-        let xPos = 200, yPos = 200, xSpeed = 3, ySpeed = 3, isHovered = false;
-
-        button.style.left = `${xPos}px`;
-        button.style.top = `${yPos}px`;
-
-        button.addEventListener('mouseenter', () => isHovered = true);
-        button.addEventListener('mouseleave', () => isHovered = false);
-
-        function animateButton() {
-            if (!isHovered) {
-                xPos += xSpeed;
-                yPos += ySpeed;
-
-                if (xPos <= 0 || xPos + button.offsetWidth >= window.innerWidth) xSpeed = -xSpeed;
-                if (yPos <= 0 || yPos + button.offsetHeight >= window.innerHeight) ySpeed = -ySpeed;
-
-                button.style.left = `${xPos}px`;
-                button.style.top = `${yPos}px`;
-            }
-            requestAnimationFrame(animateButton);
-        }
-
-        animateButton();
-    });
 
     async function getCoordinates(cityName) {
         const url = `https://restapi.amap.com/v3/geocode/geo?address=${encodeURIComponent(cityName)}&key=${amapApiKey}`;
@@ -190,30 +148,41 @@
         const weatherInfo = document.getElementById('weather-info');
         weatherInfo.innerHTML = '';
 
-        const days = data.list.filter((item, index) => index % 8 === 0);
-        const dates = [], tempMax = [], tempMin = [];
+        const dailyData = [];
+        const dates = [];
+        const tempMax = [];
+        const tempMin = [];
 
-        days.forEach(day => {
-            const date = new Date(day.dt * 1000).toLocaleDateString();
-            const weather = day.weather[0].description;
-            const humidity = day.main.humidity;
-            const windSpeed = day.wind.speed;
-            const tempMaxDay = day.main.temp_max;
-            const tempMinDay = day.main.temp_min;
-            const icon = day.weather[0].icon;
+        data.list.forEach((item) => {
+            const date = new Date(item.dt * 1000).toLocaleDateString();
+            if (!dailyData[date]) {
+                dailyData[date] = { tempMax: item.main.temp_max, tempMin: item.main.temp_min, details: item };
+            } else {
+                dailyData[date].tempMax = Math.max(dailyData[date].tempMax, item.main.temp_max);
+                dailyData[date].tempMin = Math.min(dailyData[date].tempMin, item.main.temp_min);
+            }
+        });
+
+        Object.entries(dailyData).forEach(([date, value]) => {
+            const weather = value.details.weather[0].description;
+            const humidity = value.details.main.humidity;
+            const windSpeed = value.details.wind.speed;
+            const icon = value.details.weather[0].icon;
 
             dates.push(date);
-            tempMax.push(tempMaxDay);
-            tempMin.push(tempMinDay);
+            tempMax.push(value.tempMax);
+            tempMin.push(value.tempMin);
 
             const card = document.createElement('div');
             card.className = 'weather-card';
             card.innerHTML = `
                 <p class="font-bold">${date}</p>
-                <img src="https://openweathermap.org/img/wn/${icon}.png" alt="${weather}" style="width:50px; height:50px;">
+                <div class="weather-icon">
+                    <img src="https://openweathermap.org/img/wn/${icon}.png" alt="${weather}" style="width:50px; height:50px;">
+                </div>
                 <p>${weather}</p>
-                <p>最高温度: ${tempMaxDay}°C</p>
-                <p>最低温度: ${tempMinDay}°C</p>
+                <p>最高温度: ${value.tempMax}°C</p>
+                <p>最低温度: ${value.tempMin}°C</p>
                 <p>湿度: ${humidity}%</p>
                 <p>风速: ${windSpeed} m/s</p>
             `;
@@ -246,12 +215,14 @@
                     }
                 ]
             },
-            options: { responsive: true }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' }
+                }
+            }
         });
-    }
-
-    function handleButtonClick() {
-        setTimeout(() => window.location.href = 'https://ys.mihoyo.com/', 100);
     }
 </script>
 </body>
