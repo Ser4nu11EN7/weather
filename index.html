@@ -5,26 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>天气查询</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* 页面背景和布局 */
         body {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             background-color: #f3f4f6;
             font-family: Arial, sans-serif;
             margin: 0;
-            overflow: hidden; /* 防止滚动条 */
+            padding: 20px;
         }
 
         .container {
             text-align: center;
+            width: 100%;
+            max-width: 800px;
         }
 
-        /* 反弹按钮样式 */
         .bounce-btn {
-            position: absolute;
+            position: fixed;
             padding: 10px 20px;
             font-size: 16px;
             background-color: #ffffff;
@@ -41,7 +43,6 @@
             border-color: #999;
         }
 
-        /* 输入框和查询按钮 */
         #city {
             padding: 10px;
             font-size: 16px;
@@ -63,28 +64,39 @@
         button:hover {
             background-color: #0056b3;
         }
+
+        .weather-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .weather-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1 class="text-3xl font-bold mb-4">天气查询</h1>
-    <p class="text-sm text-gray-500 mb-4">查询仅支持英文名，如查询“北京”则需输入“beijing”</p>
+    <p class="text-sm text-gray-500 mb-4">查询仅支持英文名，如查询"北京"则需输入"beijing"</p>
 
-    <!-- 输入框和查询按钮 -->
     <input id="city" type="text" placeholder="输入城市名" class="px-4 py-2 border rounded mb-4">
     <button onclick="getWeather()">查询天气</button>
 
-    <!-- 城市和天气信息显示区 -->
     <div id="weather-info" class="mt-4"></div>
+    <div id="forecast-info" class="mt-4"></div>
+    <canvas id="tempChart" width="400" height="200"></canvas>
 
-    <!-- 反弹按钮 -->
     <button id="bounceButton" class="bounce-btn" onclick="handleButtonClick()">别点</button>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // 获取反弹按钮
         const button = document.getElementById('bounceButton');
 
         if (!button) {
@@ -92,62 +104,53 @@
             return;
         }
 
-        // 初始化按钮位置和速度
-        let xPos = 200; // 初始X坐标
-        let yPos = 200; // 初始Y坐标
-        let xSpeed = 2;  // X方向速度
-        let ySpeed = 2;  // Y方向速度
-        let isHovered = false; // 鼠标悬停标志
+        let xPos = 200;
+        let yPos = 200;
+        let xSpeed = 2;
+        let ySpeed = 2;
+        let isHovered = false;
 
-        // 设置初始按钮位置
         button.style.left = `${xPos}px`;
         button.style.top = `${yPos}px`;
 
-        // 停止移动：鼠标进入时
         button.addEventListener('mouseenter', () => {
-            isHovered = true; // 鼠标悬停时设置为 true
+            isHovered = true;
         });
 
-        // 恢复移动：鼠标离开时
         button.addEventListener('mouseleave', () => {
-            isHovered = false; // 鼠标移开时设置为 false
+            isHovered = false;
         });
 
-        // 动画逻辑
         function animateButton() {
             if (!isHovered) {
-                // 如果未悬停，更新位置
                 xPos += xSpeed;
                 yPos += ySpeed;
 
-                // 碰撞检测：碰到左右边界
                 if (xPos <= 0 || xPos + button.offsetWidth >= window.innerWidth) {
-                    xSpeed = -xSpeed; // 反转X方向
+                    xSpeed = -xSpeed;
                 }
 
-                // 碰撞检测：碰到上下边界
                 if (yPos <= 0 || yPos + button.offsetHeight >= window.innerHeight) {
-                    ySpeed = -ySpeed; // 反转Y方向
+                    ySpeed = -ySpeed;
                 }
 
-                // 更新按钮位置
                 button.style.left = `${xPos}px`;
                 button.style.top = `${yPos}px`;
             }
 
-            // 请求下一帧动画
             requestAnimationFrame(animateButton);
         }
 
-        // 启动动画
         animateButton();
     });
 
-    // 天气查询函数
+    let chart;
+
     async function getWeather() {
         const city = document.getElementById('city').value.trim().toLowerCase();
         const apiKey = 'fdb5da4cbed0679b2f6f9151d4b297d5'; // 替换成你的 API 密钥
-        const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=zh_cn`;
+        const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=zh_cn`;
+        const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric&lang=zh_cn`;
 
         if (city === '') {
             alert('请输入城市名');
@@ -155,35 +158,151 @@
         }
 
         try {
-            const response = await fetch(url);
-            const data = await response.json();
+            const [currentResponse, forecastResponse] = await Promise.all([
+                fetch(currentWeatherUrl),
+                fetch(forecastUrl)
+            ]);
 
-            if (data.cod === '404') {
+            const currentData = await currentResponse.json();
+            const forecastData = await forecastResponse.json();
+
+            if (currentData.cod === '404' || forecastData.cod === '404') {
                 document.getElementById('weather-info').innerHTML = '<p class="text-red-500">未找到该城市</p>';
-            } else {
-                const weather = data.weather[0].description;
-                const temp = data.main.temp;
-                const humidity = data.main.humidity;
-                const windSpeed = data.wind.speed;
-
-                document.getElementById('weather-info').innerHTML = `
-                    <p class="font-bold text-xl">${data.name}</p>
-                    <p>天气：${weather}</p>
-                    <p>温度：${temp}°C</p>
-                    <p>湿度：${humidity}%</p>
-                    <p>风速：${windSpeed} m/s</p>
-                `;
+                document.getElementById('forecast-info').innerHTML = '';
+                if (chart) chart.destroy();
+                return;
             }
+
+            displayCurrentWeather(currentData);
+            displayForecast(forecastData);
+            createTempChart(forecastData);
+
         } catch (error) {
             console.error(error);
             document.getElementById('weather-info').innerHTML = '<p class="text-red-500">无法获取天气数据</p>';
+            document.getElementById('forecast-info').innerHTML = '';
+            if (chart) chart.destroy();
         }
     }
 
-    // 按钮点击事件
+    function displayCurrentWeather(data) {
+        const weather = data.weather[0].description;
+        const temp = data.main.temp;
+        const humidity = data.main.humidity;
+        const windSpeed = data.wind.speed;
+
+        const weatherIcon = getWeatherIcon(data.weather[0].icon);
+
+        document.getElementById('weather-info').innerHTML = `
+            <div class="weather-card">
+                <h2 class="font-bold text-xl mb-2">${data.name} - 当前天气</h2>
+                <p><i class="${weatherIcon} weather-icon"></i>${weather}</p>
+                <p><i class="fas fa-thermometer-half weather-icon"></i>温度：${temp.toFixed(1)}°C</p>
+                <p><i class="fas fa-tint weather-icon"></i>湿度：${humidity}%</p>
+                <p><i class="fas fa-wind weather-icon"></i>风速：${windSpeed} m/s</p>
+            </div>
+        `;
+    }
+
+    function displayForecast(data) {
+        const forecastDiv = document.getElementById('forecast-info');
+        forecastDiv.innerHTML = '<h2 class="font-bold text-xl mb-4">未来五天天气预报</h2>';
+
+        const dailyForecasts = data.list.filter(item => item.dt_txt.includes('12:00:00'));
+        dailyForecasts.slice(0, 5).forEach(day => {
+            const date = new Date(day.dt * 1000);
+            const weatherIcon = getWeatherIcon(day.weather[0].icon);
+            
+            forecastDiv.innerHTML += `
+                <div class="weather-card">
+                    <h3 class="font-bold">${date.toLocaleDateString()}</h3>
+                    <p><i class="${weatherIcon} weather-icon"></i>${day.weather[0].description}</p>
+                    <p><i class="fas fa-thermometer-half weather-icon"></i>温度：${day.main.temp.toFixed(1)}°C</p>
+                    <p><i class="fas fa-tint weather-icon"></i>湿度：${day.main.humidity}%</p>
+                    <p><i class="fas fa-wind weather-icon"></i>风速：${day.wind.speed} m/s</p>
+                </div>
+            `;
+        });
+    }
+
+    function createTempChart(data) {
+        const ctx = document.getElementById('tempChart').getContext('2d');
+        const dailyForecasts = data.list.filter(item => item.dt_txt.includes('12:00:00'));
+        const dates = dailyForecasts.slice(0, 5).map(day => new Date(day.dt * 1000).toLocaleDateString());
+        const maxTemps = dailyForecasts.slice(0, 5).map(day => day.main.temp_max);
+        const minTemps = dailyForecasts.slice(0, 5).map(day => day.main.temp_min);
+
+        if (chart) {
+            chart.destroy();
+        }
+
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: '最高温度',
+                        data: maxTemps,
+                        borderColor: 'rgb(255, 99, 132)',
+                        tension: 0.1
+                    },
+                    {
+                        label: '最低温度',
+                        data: minTemps,
+                        borderColor: 'rgb(54, 162, 235)',
+                        tension: 0.1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display:true,
+                        text: '5天温度预报'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: '温度 (°C)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function getWeatherIcon(iconCode) {
+        const iconMap = {
+            '01d': 'fas fa-sun',
+            '01n': 'fas fa-moon',
+            '02d': 'fas fa-cloud-sun',
+            '02n': 'fas fa-cloud-moon',
+            '03d': 'fas fa-cloud',
+            '03n': 'fas fa-cloud',
+            '04d': 'fas fa-cloud',
+            '04n': 'fas fa-cloud',
+            '09d': 'fas fa-cloud-showers-heavy',
+            '09n': 'fas fa-cloud-showers-heavy',
+            '10d': 'fas fa-cloud-sun-rain',
+            '10n': 'fas fa-cloud-moon-rain',
+            '11d': 'fas fa-bolt',
+            '11n': 'fas fa-bolt',
+            '13d': 'fas fa-snowflake',
+            '13n': 'fas fa-snowflake',
+            '50d': 'fas fa-smog',
+            '50n': 'fas fa-smog'
+        };
+        return iconMap[iconCode] || 'fas fa-question';
+    }
+
     function handleButtonClick() {
         setTimeout(() => {
-            window.location.href = 'https://ys.mihoyo.com/'; // 跳转到目标URL
+            window.location.href = 'https://ys.mihoyo.com/';
         }, 100);
     }
 </script>
